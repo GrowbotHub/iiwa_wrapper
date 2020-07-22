@@ -81,6 +81,14 @@ void iiwa_wrapper::waitForFinishedMovement(int timeoutSec){
   }
 }
 
+void iiwa_wrapper::getRealRobotPosition(float* x, float* y, float* z, float* a, float* b, float* c){
+  *x = iiwa_RealCartPos.pose.position.x;
+}
+
+void iiwa_wrapper::getRealRobotJoint(float* a1,float* a2,float* a3,float* a4,float* a5,float* a6,float* a7){
+
+}
+
 float iiwa_wrapper::deg2rad(float degrees){
   return degrees / 180.0 * 3.1415965;
 }
@@ -176,17 +184,25 @@ void iiwa_wrapper::goToJointDegrees(float a1, float a2, float a3, float a4, floa
 
 }
 
-void iiwa_wrapper::CartesianImpedanceMode(){
+void iiwa_wrapper::PositionMode(){
+  ros::ServiceClient cimClient = iiwa_nh.serviceClient<iiwa_msgs::ConfigureControlMode>("/iiwa/configuration/ConfigureControlMode");
+  iiwa_command_mode = 0;
+  iiwa_msgs::ConfigureControlMode configCIM;
+  configCIM.request.control_mode = 0;
+  cimClient.call(configCIM);
+}
+
+void iiwa_wrapper::CartesianImpedanceMode(float x, float y, float z, float a, float b, float c){
   ros::ServiceClient cimClient = iiwa_nh.serviceClient<iiwa_msgs::ConfigureControlMode>("/iiwa/configuration/ConfigureControlMode");
   iiwa_command_mode = 2;
   iiwa_msgs::ConfigureControlMode configCIM;
   configCIM.request.control_mode = 2;
-  configCIM.request.cartesian_impedance.cartesian_stiffness.x = 2000.0;
-  configCIM.request.cartesian_impedance.cartesian_stiffness.y = 2000.0;
-  configCIM.request.cartesian_impedance.cartesian_stiffness.z = 2000.0;
-  configCIM.request.cartesian_impedance.cartesian_stiffness.a = 100.0;
-  configCIM.request.cartesian_impedance.cartesian_stiffness.b = 100.0;
-  configCIM.request.cartesian_impedance.cartesian_stiffness.c = 100.0;
+  configCIM.request.cartesian_impedance.cartesian_stiffness.x = x;
+  configCIM.request.cartesian_impedance.cartesian_stiffness.y = y;
+  configCIM.request.cartesian_impedance.cartesian_stiffness.z = z;
+  configCIM.request.cartesian_impedance.cartesian_stiffness.a = a;
+  configCIM.request.cartesian_impedance.cartesian_stiffness.b = b;
+  configCIM.request.cartesian_impedance.cartesian_stiffness.c = c;
 
   cimClient.call(configCIM);
 

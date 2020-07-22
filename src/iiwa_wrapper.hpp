@@ -62,8 +62,15 @@ public:
     // Go to a given joint position
     void goToJointDegrees(float a1, float a2, float a3, float a4, float a5, float a6, float a7);
 
+    // Get the robot actual position, returns the values in the associated pointers
+    void getRealRobotPosition(float* x, float* y, float* z, float* a, float* b, float* c);
+    void getRealRobotJoint(float* a1,float* a2,float* a3,float* a4,float* a5,float* a6,float* a7);
+
+
     // Activates the Impedance Mode. Robot needs to be calibrated and having a tool selected.
-    void CartesianImpedanceMode();
+    void CartesianImpedanceMode(float x, float y, float z, float a, float b, float c);
+    void PositionMode();
+
 
     // Callback functions for the waitForFinishedMovement function. 
     void callBackCartPos(const iiwa_msgs::CartesianPose::ConstPtr& msg);
