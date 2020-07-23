@@ -2,15 +2,13 @@
 
 using namespace std;
 
-
-
 iiwa_wrapper::iiwa_wrapper(ros::NodeHandle &n/* args */)
 {
   iiwa_nh = n;
   iiwa_pubJointPos = iiwa_nh.advertise<iiwa_msgs::JointPosition>("/iiwa/command/JointPosition",10);
   iiwa_pubCartEuler = iiwa_nh.advertise<iiwa_msgs::CartesianEulerPose>("/iiwa/command/CartesianEulerPose",10);
   iiwa_pubCartPos = iiwa_nh.advertise< geometry_msgs::PoseStamped>("/iiwa/command/CartesianPose",10);
-  iiwa_subJointPos = iiwa_nh.subscribe<iiwa_msgs::JointPosition>("/iiwa/state/JointPosition",10, &iiwa_wrapper::callBackPos, this);
+  //iiwa_subJointPos = iiwa_nh.subscribe<iiwa_msgs::JointPosition>("/iiwa/state/JointPosition",10, &iiwa_wrapper::callBackPos, this);
   iiwa_subCartPos = iiwa_nh.subscribe<iiwa_msgs::CartesianPose>("/iiwa/state/CartesianPose",10, &iiwa_wrapper::callBackCartPos, this);
   iiwa_TimeToDestClient = iiwa_nh.serviceClient<iiwa_msgs::TimeToDestination>("/iiwa/state/timeToDestination");
 }
@@ -20,30 +18,30 @@ iiwa_wrapper::~iiwa_wrapper()
 }
 
 void iiwa_wrapper::callBackPos(const iiwa_msgs::JointPosition::ConstPtr& msg){
-  //ROS_INFO_STREAM("JointPosition received");
+  ROS_INFO_STREAM("JointPosition received");
   if (iiwa_pose_type == JOINT){
     iiwa_fini=true;
 
     // compare actual position with wanted one (_msgCommand.position.aX)
-    if (iiwa_msgCommand.position.a1 - msg->position.a1 > 0.0005 )
+    if (iiwa_msgCommand.position.a1 - msg->position.a1 > 0.005 )
       iiwa_fini = false;
-    if (iiwa_msgCommand.position.a2 - msg->position.a2 > 0.0005 )
+    if (iiwa_msgCommand.position.a2 - msg->position.a2 > 0.005 )
       iiwa_fini = false;
-    if (iiwa_msgCommand.position.a3 - msg->position.a3 > 0.0005 )
+    if (iiwa_msgCommand.position.a3 - msg->position.a3 > 0.005 )
       iiwa_fini = false;
-    if (iiwa_msgCommand.position.a4 - msg->position.a4 > 0.0005 )
+    if (iiwa_msgCommand.position.a4 - msg->position.a4 > 0.005 )
       iiwa_fini = false;
-    if (iiwa_msgCommand.position.a5 - msg->position.a5 > 0.0005 )
+    if (iiwa_msgCommand.position.a5 - msg->position.a5 > 0.005 )
       iiwa_fini = false;
-    if (iiwa_msgCommand.position.a6 - msg->position.a6 > 0.0005 )
+    if (iiwa_msgCommand.position.a6 - msg->position.a6 > 0.005 )
       iiwa_fini = false;
-    if (iiwa_msgCommand.position.a7 - msg->position.a7 > 0.0005 )
+    if (iiwa_msgCommand.position.a7 - msg->position.a7 > 0.005 )
       iiwa_fini = false;
   }
 }
 
 void iiwa_wrapper::callBackCartPos(const iiwa_msgs::CartesianPose::ConstPtr& msg){
-  //ROS_INFO_STREAM("CartesianPosition received"<< msg->poseStamped.pose.position.x);
+  //ROS_INFO_STREAM("CartesianPosition received"<< iiwa_CartPos.pose.position.x - msg->poseStamped.pose.position.x);
   if (iiwa_pose_type == CART){
     iiwa_fini=true;
     iiwa_RealCartPos = msg->poseStamped;
@@ -53,13 +51,13 @@ void iiwa_wrapper::callBackCartPos(const iiwa_msgs::CartesianPose::ConstPtr& msg
       iiwa_fini = false;
     if (iiwa_CartPos.pose.position.z - msg->poseStamped.pose.position.z > 0.005 )
       iiwa_fini = false;
-    if (iiwa_CartPos.pose.orientation.x - msg->poseStamped.pose.orientation.x > 0.001 )
+    if (iiwa_CartPos.pose.orientation.x - msg->poseStamped.pose.orientation.x > 0.1 )
       iiwa_fini = false;
-    if (iiwa_CartPos.pose.orientation.y - msg->poseStamped.pose.orientation.y > 0.001 )
+    if (iiwa_CartPos.pose.orientation.y - msg->poseStamped.pose.orientation.y > 0.1 )
       iiwa_fini = false;
-    if (iiwa_CartPos.pose.orientation.z - msg->poseStamped.pose.orientation.z > 0.001 )
+    if (iiwa_CartPos.pose.orientation.z - msg->poseStamped.pose.orientation.z > 0.1 )
       iiwa_fini = false;
-    if (iiwa_CartPos.pose.orientation.w - msg->poseStamped.pose.orientation.w > 0.001 )
+    if (iiwa_CartPos.pose.orientation.w - msg->poseStamped.pose.orientation.w > 0.1 )
       iiwa_fini = false;
   }
 }
@@ -67,13 +65,13 @@ void iiwa_wrapper::callBackCartPos(const iiwa_msgs::CartesianPose::ConstPtr& msg
 void iiwa_wrapper::waitForFinishedMovement(int timeoutSec){
   iiwa_fini = false;
   int counter = 0;
-  while(!iiwa_fini && counter < (timeoutSec*10)){//wait until move finished, timeout at 1 min. If timeout, kill the process
-    ros::Duration(0.1).sleep();
+  while(!iiwa_fini && counter < (timeoutSec*400)){//wait until move finished, timeout at 1 min. If timeout, kill the process
+    ros::Duration(0.0025).sleep();
     ros::spinOnce();
     ++counter;
   }
   if(counter >= timeoutSec*10){
-    kill(getpid(), SIGINT);
+  //  kill(getpid(), SIGINT);
     ROS_INFO_STREAM("Robot never arrived at position! Killing the process");
   }
   else{
@@ -83,6 +81,8 @@ void iiwa_wrapper::waitForFinishedMovement(int timeoutSec){
 
 void iiwa_wrapper::getRealRobotPosition(float* x, float* y, float* z, float* a, float* b, float* c){
   *x = iiwa_RealCartPos.pose.position.x;
+  *y = iiwa_RealCartPos.pose.position.y;
+  *z = iiwa_RealCartPos.pose.position.z;
 }
 
 void iiwa_wrapper::getRealRobotJoint(float* a1,float* a2,float* a3,float* a4,float* a5,float* a6,float* a7){

@@ -91,16 +91,26 @@ void TestKuki::run() {
   //publishData();
   _mutex.unlock();
 
-  //ros::Duration(10.0).sleep();
+  ros::Duration(2.0).sleep();
+  kuki->PositionMode();
 
   kuki->goToPosition(0.620, 0.046, -0.645, -90, 0, -179);
-  kuki->waitForFinishedMovement(10);
+  kuki->waitForFinishedMovement(30);
   //goToPosition(0.620, 0.046, -0.645, -0.707, 0.707, -0.00617, 0.00617);
   
   //ros::Duration(10.0).sleep();
 
   //kuki.goToPosition(0.620, 0.046, -0.8, -0.5, 0.5, -0.5, 0.5);
-  //kuki.CartesianImpedanceMode();
+  kuki->CartesianImpedanceMode(2000.0, 2000.0, 100.0, 300.0, 300.0, 300.0);
+
+  // go lower than the shelve
+  kuki->goToPosition(0.620, 0.046, -0.645, -90, 0, -179);
+  kuki->waitForFinishedMovement(30);
+
+  float x,y,z,a,b,c;
+  kuki->getRealRobotPosition(&x,&y,&z,&a,&b,&c);
+
+  ROS_INFO_STREAM("Robot Real Position: X: "<< x << " Y: "<< y << " Z: " << z);
 
   
   _vd.setConstant(0.0f);
